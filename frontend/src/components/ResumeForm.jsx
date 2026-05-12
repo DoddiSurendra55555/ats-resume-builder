@@ -10,7 +10,8 @@ const ResumeForm = () => {
     } = useAppContext();
 
     // Use the Vercel Environment Variable for the API URL
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+    // Replace with YOUR exact Render backend URL. NO slash at the end!
+const API_BASE_URL = 'https://ats-resume-builder-backend-9dj5.onrender.com';
 
     const handleInfoChange = (e) => setPersonalInfo({ ...personalInfo, [e.target.name]: e.target.value });
 
