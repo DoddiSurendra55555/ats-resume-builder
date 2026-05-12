@@ -6,13 +6,16 @@ const ResumeChatbot = () => {
     const [prompt, setPrompt] = useState('');
     const [isEditing, setIsEditing] = useState(false);
 
+    // HARDCODED PRODUCTION URL
+    const API_BASE_URL = 'https://ats-resume-builder-backend-9dj5.onrender.com';
+
     const handleChatSubmit = async (e) => {
         e.preventDefault();
         if (!prompt.trim()) return;
 
         setIsEditing(true);
         try {
-            const response = await fetch('https://ats-resume-builder-backend-9dj5.onrender.com/api/chat-edit', {
+            const response = await fetch(`${API_BASE_URL}/api/chat-edit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 

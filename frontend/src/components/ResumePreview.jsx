@@ -1,171 +1,173 @@
-import { useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import ResumePDF from '../utils/PdfGenerator';
-import InterviewQA from './InterviewQA';
-import ResumeChatbot from './ResumeChatbot';
-import styles from './ResumePreview.module.css';
+import styles from './ResumeForm.module.css';
 
-const ResumePreview = () => {
-    const { generatedData, setGeneratedData } = useAppContext();
+const ResumeForm = () => {
+    const { 
+        theme, apiKey, setApiKey, personalInfo, setPersonalInfo,
+        education, setEducation, experience, setExperience,
+        skills, setSkills, jobDescription, setJobDescription, 
+        setGeneratedData, setLoading, loading, streamText, setStreamText
+    } = useAppContext();
 
-    const autoResize = (e) => {
-        e.target.style.height = 'auto';
-        e.target.style.height = (e.target.scrollHeight) + 'px';
+    // HARDCODED PRODUCTION URL - Guaranteed to bypass Vercel environment variable bugs
+    const API_BASE_URL = 'https://ats-resume-builder-backend-9dj5.onrender.com';
+
+    const handleInfoChange = (e) => setPersonalInfo({ ...personalInfo, [e.target.name]: e.target.value });
+
+    const handleArrayChange = (index, field, value, setter, array) => {
+        const newArray = [...array];
+        newArray[index][field] = value;
+        setter(newArray);
     };
 
-    useEffect(() => {
-        if (generatedData) {
-            setTimeout(() => {
-                const textareas = document.querySelectorAll('textarea');
-                textareas.forEach(ta => {
-                    ta.style.height = 'auto';
-                    ta.style.height = ta.scrollHeight + 'px';
-                });
-            }, 100);
+    const addArrayItem = (setter, array, emptyObj) => setter([...array, emptyObj]);
+    const removeArrayItem = (index, setter, array) => setter(array.filter((_, i) => i !== index));
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setStreamText(''); 
+        
+        try {
+            const combinedBaseResume = `
+                Name: ${personalInfo.name}
+                Email: ${personalInfo.email}
+                Phone: ${personalInfo.phone}
+                LinkedIn: ${personalInfo.linkedin}
+                GitHub: ${personalInfo.github}
+
+                EDUCATION:
+                ${education.map(ed => `- Degree: ${ed.degree}, School: ${ed.school}, Grad Date: ${ed.graduationDate}`).join('\n')}
+
+                EXPERIENCE & PROJECTS:
+                ${experience.map(ex => `- Role: ${ex.role}, Company: ${ex.company}, Dates: ${ex.dates}\n  Details: ${ex.description}`).join('\n')}
+
+                SKILLS:
+                ${skills}
+            `;
+
+            const response = await fetch(`${API_BASE_URL}/api/optimize`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey, baseResume: combinedBaseResume, jobDescription }),
+            });
+
+            if (!response.ok) throw new Error("Connection failed. Please try again.");
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullStream = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                fullStream += chunk;
+                setStreamText(fullStream); 
+            }
+
+            const finalData = JSON.parse(fullStream);
+            setGeneratedData(finalData);
+
+        } catch (error) {
+            alert("The server is waking up or connection failed. Please wait 30 seconds and try again!");
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
-    }, [generatedData]);
-
-    if (!generatedData) return null;
-
-    const handlePersonalInfo = (field, value) => {
-        setGeneratedData({ ...generatedData, personal_info: { ...generatedData.personal_info, [field]: value } });
     };
 
-    const handleSummary = (value) => setGeneratedData({ ...generatedData, summary: value });
-
-    // NEW: Education Updater
-    const handleEdu = (index, field, value) => {
-        const newEdu = [...(generatedData.education || [])];
-        if (!newEdu[index]) newEdu[index] = {};
-        newEdu[index][field] = value;
-        setGeneratedData({ ...generatedData, education: newEdu });
-    };
-
-    const handleSkill = (index, value) => {
-        const newSkills = [...generatedData.skills];
-        newSkills[index] = value;
-        setGeneratedData({ ...generatedData, skills: newSkills });
-    };
-
-    const handleExp = (expIndex, field, value) => {
-        const newExp = [...generatedData.experience];
-        newExp[expIndex][field] = value;
-        setGeneratedData({ ...generatedData, experience: newExp });
-    };
-
-    const handleBullet = (expIndex, bulletIndex, value) => {
-        const newExp = [...generatedData.experience];
-        newExp[expIndex].achievements[bulletIndex] = value;
-        setGeneratedData({ ...generatedData, experience: newExp });
-    };
+    if (loading) {
+        return (
+            <div style={{ maxWidth: '900px', margin: '40px auto', backgroundColor: '#111827', borderRadius: '8px', padding: '30px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #374151', paddingBottom: '16px' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#ef4444' }}></div>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#eab308' }}></div>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#22c55e' }}></div>
+                    <span style={{ color: '#9ca3af', marginLeft: '8px', fontFamily: 'monospace', fontSize: '14px' }}>Gemini 2.5 Agent Streaming...</span>
+                </div>
+                <pre style={{ color: '#10b981', fontFamily: 'monospace', fontSize: '14px', whiteSpace: 'pre-wrap', minHeight: '300px', maxHeight: '500px', overflowY: 'auto' }}>
+                    {streamText || "Establishing secure connection to Render Backend...\nWaiting for AI Cold Boot...\nAnalyzing Input...\n\n"}
+                    <span className="cursor-blink">|</span>
+                </pre>
+                <style>{`@keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } } .cursor-blink { animation: blink 1s step-end infinite; }`}</style>
+            </div>
+        );
+    }
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <div className={styles.controls} style={{ maxWidth: '100%', marginBottom: '20px' }}>
-                <button className={`${styles.btn} ${styles['btn-secondary']}`} onClick={() => setGeneratedData(null)}>
-                    &larr; Start Over
-                </button>
-                <PDFDownloadLink 
-                    document={<ResumePDF data={generatedData} />} 
-                    fileName={`${generatedData.personal_info?.name || 'Optimized'}_Resume.pdf`}
-                    className={`${styles.btn} ${styles['btn-primary']}`}
-                    style={{ textDecoration: 'none' }}
-                >
-                    {({ loading }) => (loading ? 'Preparing Document...' : 'Download PDF')}
-                </PDFDownloadLink>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '7fr 3fr', gap: '30px', alignItems: 'start' }}>
-                
-                {/* Left Side: Resume */}
-                <div className={styles['document-container']} style={{ margin: 0, width: '100%', boxSizing: 'border-box' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '20px', color: '#6b7280', fontSize: '14px', fontStyle: 'italic' }}>
-                        Click anywhere to edit. You can now drag the bottom right corner of any text box to manually resize it!
-                    </div>
-
-                    <div className={styles.header}>
-                        <input className={`${styles['editable-input']} ${styles['name-input']}`} value={generatedData.personal_info?.name || ''} onChange={(e) => handlePersonalInfo('name', e.target.value)} />
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                            <input className={`${styles['editable-input']} ${styles['contact-input']}`} value={generatedData.personal_info?.email || ''} onChange={(e) => handlePersonalInfo('email', e.target.value)} />
-                            <span>|</span>
-                            <input className={`${styles['editable-input']} ${styles['contact-input']}`} value={generatedData.personal_info?.phone || ''} onChange={(e) => handlePersonalInfo('phone', e.target.value)} />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                            <input className={`${styles['editable-input']} ${styles['contact-input']}`} value={generatedData.personal_info?.linkedin || ''} onChange={(e) => handlePersonalInfo('linkedin', e.target.value)} />
-                            <span>|</span>
-                            <input className={`${styles['editable-input']} ${styles['contact-input']}`} value={generatedData.personal_info?.github || ''} onChange={(e) => handlePersonalInfo('github', e.target.value)} />
-                        </div>
-                    </div>
-
-                    <h2 className={styles['section-title']}>Professional Summary</h2>
-                    <textarea 
-                        className={`${styles['editable-textarea']} ${styles['summary-input']}`}
-                        value={generatedData.summary || ''}
-                        onChange={(e) => handleSummary(e.target.value)}
-                        onInput={autoResize}
-                        style={{ minHeight: '60px', overflow: 'auto' }} 
-                    />
-
-                    {/* NEW: Education Section */}
-                    {generatedData.education && generatedData.education.length > 0 && (
-                        <>
-                            <h2 className={styles['section-title']}>Education</h2>
-                            {generatedData.education.map((edu, index) => (
-                                <div key={index} style={{ marginBottom: '12px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                                        <input className={`${styles['editable-input']}`} value={edu.degree || ''} onChange={(e) => handleEdu(index, 'degree', e.target.value)} style={{ width: '60%', fontWeight: 'bold', fontSize: '15px' }} />
-                                        <input className={`${styles['editable-input']}`} value={edu.graduationDate || ''} onChange={(e) => handleEdu(index, 'graduationDate', e.target.value)} style={{ width: '30%', textAlign: 'right', fontSize: '14px', color: '#4b5563' }} />
-                                    </div>
-                                    <input className={`${styles['editable-input']}`} value={edu.school || ''} onChange={(e) => handleEdu(index, 'school', e.target.value)} style={{ width: '100%', fontSize: '14px', fontStyle: 'italic', marginTop: '2px' }} />
-                                </div>
-                            ))}
-                        </>
-                    )}
-
-                    <h2 className={styles['section-title']}>Technical Skills</h2>
-                    <div className={styles['skills-list']}>
-                        {generatedData.skills?.map((skill, index) => (
-                            <input key={index} className={`${styles['editable-input']} ${styles['skill-input']}`} value={skill} onChange={(e) => handleSkill(index, e.target.value)} />
-                        ))}
-                    </div>
-
-                    <h2 className={styles['section-title']}>Work Experience</h2>
-                    {generatedData.experience?.map((exp, expIndex) => (
-                        <div key={expIndex} style={{ marginBottom: '20px' }}>
-                            <div className={styles['job-header']} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <div style={{ display: 'flex', flexGrow: 1, gap: '4px' }}>
-                                    <input className={`${styles['editable-input']} ${styles['job-title-input']}`} value={exp.role} onChange={(e) => handleExp(expIndex, 'role', e.target.value)} style={{ width: '40%' }} />
-                                    <span>at</span>
-                                    <input className={`${styles['editable-input']} ${styles['job-title-input']}`} value={exp.company} onChange={(e) => handleExp(expIndex, 'company', e.target.value)} style={{ width: '50%' }} />
-                                </div>
-                                <input className={`${styles['editable-input']} ${styles['job-date-input']}`} value={exp.duration} onChange={(e) => handleExp(expIndex, 'duration', e.target.value)} />
-                            </div>
-                            
-                            <ul style={{ paddingLeft: '20px', margin: '8px 0' }}>
-                                {exp.achievements.map((bullet, bulletIndex) => (
-                                    <li key={bulletIndex} style={{ marginBottom: '4px' }}>
-                                        <textarea 
-                                            className={`${styles['editable-textarea']} ${styles['bullet-input']}`}
-                                            value={bullet}
-                                            onChange={(e) => handleBullet(expIndex, bulletIndex, e.target.value)}
-                                            onInput={autoResize}
-                                            style={{ minHeight: '1.5em', display: 'block', width: '100%', overflow: 'auto' }} 
-                                        />
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
+        <div className={styles['form-container']}>
+            <h2 className={styles['form-title']}>Optimize Your Resume</h2>
+            <form onSubmit={handleSubmit}>
+                <div className={styles['form-group']}>
+                    <label className={styles['form-label']}>Gemini API Key (BYOK)</label>
+                    <input type="password" className={styles['form-input']} placeholder="Paste your API key..." value={apiKey} onChange={(e) => setApiKey(e.target.value)} required />
                 </div>
 
-                <ResumeChatbot />
+                <h3 className={styles['section-title']}>Personal Information</h3>
+                <div className={styles['grid-2-col']}>
+                    <div className={styles['form-group']}><label className={styles['form-label']}>Full Name</label><input type="text" name="name" className={styles['form-input']} value={personalInfo.name} onChange={handleInfoChange} required /></div>
+                    <div className={styles['form-group']}><label className={styles['form-label']}>Email</label><input type="email" name="email" className={styles['form-input']} value={personalInfo.email} onChange={handleInfoChange} required /></div>
+                    <div className={styles['form-group']}><label className={styles['form-label']}>Phone</label><input type="tel" name="phone" className={styles['form-input']} value={personalInfo.phone} onChange={handleInfoChange} required /></div>
+                    <div className={styles['form-group']}><label className={styles['form-label']}>LinkedIn</label><input type="url" name="linkedin" className={styles['form-input']} value={personalInfo.linkedin} onChange={handleInfoChange} /></div>
+                </div>
 
-            </div>
+                <div style={{ backgroundColor: theme === 'dark' ? '#451a03' : '#fffbeb', borderLeft: '4px solid #f59e0b', padding: '12px', marginTop: '24px', marginBottom: '16px', borderRadius: '4px', fontSize: '13px', color: theme === 'dark' ? '#fde68a' : '#92400e' }}>
+                    <strong>💡 Pro Tip:</strong> Include <strong>Dates</strong> and <strong>Metrics</strong> for a 90+ ATS score!
+                </div>
 
-            <InterviewQA />
+                {/* EDUCATION SECTION */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 className={styles['section-title']} style={{ margin: 0, border: 'none' }}>Education</h3>
+                    <button type="button" onClick={() => addArrayItem(setEducation, education, { degree: '', school: '', graduationDate: '' })} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>+ Add Education</button>
+                </div>
+                {education.map((ed, index) => (
+                    <div key={index} style={{ border: '1px solid var(--border-color)', padding: '15px', borderRadius: '8px', marginBottom: '10px', position: 'relative', backgroundColor: 'var(--bg-secondary)' }}>
+                        {index > 0 && <button type="button" onClick={() => removeArrayItem(index, setEducation, education)} style={{ position: 'absolute', top: '12px', right: '12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Remove</button>}
+                        <div className={styles['grid-2-col']}>
+                            <div className={styles['form-group']}><label className={styles['form-label']}>Degree / Certification</label><input type="text" className={styles['form-input']} placeholder="e.g. B.Tech Computer Science" value={ed.degree} onChange={(e) => handleArrayChange(index, 'degree', e.target.value, setEducation, education)} required /></div>
+                            <div className={styles['form-group']}><label className={styles['form-label']}>College / Institution</label><input type="text" className={styles['form-input']} placeholder="e.g. Kalasalingam Academy" value={ed.school} onChange={(e) => handleArrayChange(index, 'school', e.target.value, setEducation, education)} required /></div>
+                            <div className={styles['form-group']}><label className={styles['form-label']}>Graduation Date</label><input type="text" className={styles['form-input']} placeholder="e.g. May 2027" value={ed.graduationDate} onChange={(e) => handleArrayChange(index, 'graduationDate', e.target.value, setEducation, education)} required /></div>
+                        </div>
+                    </div>
+                ))}
+
+                {/* EXPERIENCE SECTION */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', marginBottom: '16px' }}>
+                    <h3 className={styles['section-title']} style={{ margin: 0, borderBottom: 'none' }}>Experience & Projects</h3>
+                    <button type="button" onClick={() => addArrayItem(setExperience, experience, { role: '', company: '', dates: '', description: '' })} style={{ background: '#3b82f6', color: '#ffffff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Add Experience</button>
+                </div>
+                {experience.map((exp, index) => (
+                    <div key={index} style={{ border: '1px solid var(--border-color)', padding: '20px', borderRadius: '8px', marginBottom: '16px', position: 'relative', backgroundColor: 'var(--bg-secondary)', transition: 'all 0.3s ease' }}>
+                        {index > 0 && <button type="button" onClick={() => removeArrayItem(index, setExperience, experience)} style={{ position: 'absolute', top: '12px', right: '12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Remove</button>}
+                        <div className={styles['grid-2-col']}>
+                            <div className={styles['form-group']}><label className={styles['form-label']}>Role / Job Title</label><input type="text" className={styles['form-input']} placeholder="e.g. Technical Lead" value={exp.role} onChange={(e) => handleArrayChange(index, 'role', e.target.value, setExperience, experience)} required /></div>
+                            <div className={styles['form-group']}><label className={styles['form-label']}>Company / Project</label><input type="text" className={styles['form-input']} placeholder="e.g. CampusEats" value={exp.company} onChange={(e) => handleArrayChange(index, 'company', e.target.value, setExperience, experience)} required /></div>
+                            <div className={styles['form-group']}><label className={styles['form-label']}>Dates (Start - End)</label><input type="text" className={styles['form-input']} placeholder="e.g. Jan 2025 - Present" value={exp.dates} onChange={(e) => handleArrayChange(index, 'dates', e.target.value, setExperience, experience)} required /></div>
+                        </div>
+                        <div className={styles['form-group']}>
+                            <label className={styles['form-label']}>Description & Metrics</label>
+                            <textarea rows="3" className={styles['form-input']} placeholder="List your achievements here. Remember to include numbers! (e.g. Led a team of 4...)" value={exp.description} onChange={(e) => handleArrayChange(index, 'description', e.target.value, setExperience, experience)} required />
+                        </div>
+                    </div>
+                ))}
+
+                <h3 className={styles['section-title']}>Target Job & Skills</h3>
+                <div className={styles['form-group']}>
+                    <label className={styles['form-label']}>Technical Skills (Comma separated)</label>
+                    <input type="text" className={styles['form-input']} placeholder="React, Python, Machine Learning, Flask..." value={skills} onChange={(e) => setSkills(e.target.value)} required />
+                </div>
+                <div className={styles['form-group']}>
+                    <label className={styles['form-label']}>Target Job Description</label>
+                    <textarea rows="4" className={styles['form-input']} placeholder="Paste the requirements of the job you are applying for..." value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} required />
+                </div>
+
+                <button type="submit" disabled={loading} className={`${styles['submit-btn']} ${styles['btn-active']}`} style={{ marginTop: '30px' }}>
+                    Generate Professional Resume
+                </button>
+            </form>
         </div>
     );
 };
 
-export default ResumePreview;
+export default ResumeForm;

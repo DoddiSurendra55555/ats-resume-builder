@@ -3,10 +3,13 @@ import { useAppContext } from '../context/AppContext';
 const InterviewQA = () => {
     const { interviewQA, loadingQA, apiKey, generatedData, jobDescription, setInterviewQA, setLoadingQA } = useAppContext();
 
+    // HARDCODED PRODUCTION URL
+    const API_BASE_URL = 'https://ats-resume-builder-backend-9dj5.onrender.com';
+
     const generateQA = async () => {
         setLoadingQA(true);
         try {
-            const response = await fetch('https://ats-resume-builder-backend-9dj5.onrender.com/api/generate-interview', {
+            const response = await fetch(`${API_BASE_URL}/api/generate-interview`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
