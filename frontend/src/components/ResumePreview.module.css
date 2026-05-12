@@ -1,0 +1,81 @@
+/* src/components/ResumePreview.module.css */
+
+.controls { 
+    display: flex; 
+    gap: 16px; 
+    margin-bottom: 24px; 
+}
+
+.btn { 
+    padding: 10px 20px; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    border: none; 
+}
+
+.btn-primary { background-color: #2563eb; color: white; }
+.btn-secondary { background-color: #e5e7eb; color: #374151; }
+
+/* THE FIX: Force the physical resume to ignore Dark Mode text colors */
+.document-container { 
+    background-color: #ffffff !important; 
+    color: #000000 !important; /* Force black text */
+    padding: 40px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    border-radius: 8px; 
+    font-family: sans-serif; 
+}
+
+.header { 
+    text-align: center; 
+    margin-bottom: 24px; 
+    border-bottom: 2px solid #e5e7eb; 
+    padding-bottom: 16px; 
+}
+
+.section-title { 
+    font-size: 16px; 
+    font-weight: bold; 
+    color: #000000 !important; /* Force black title */
+    text-transform: uppercase; 
+    border-bottom: 1px solid #000000; 
+    padding-bottom: 4px; 
+    margin-bottom: 12px; 
+    margin-top: 24px; 
+}
+
+.skills-list { font-size: 14px; line-height: 1.6; }
+.job-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+
+/* --- EDITABLE STYLES --- */
+.editable-input, .editable-textarea {
+    width: 100%;
+    background-color: transparent !important;
+    color: #000000 !important; /* Force black text */
+    border: 1px dashed transparent;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    resize: both; 
+}
+
+.editable-input:hover, .editable-textarea:hover {
+    border-color: #d1d5db;
+    background-color: #f9fafb !important;
+}
+
+.editable-input:focus, .editable-textarea:focus {
+    outline: none;
+    border-color: #3b82f6 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    border-style: solid;
+}
+
+.name-input { font-size: 32px; font-weight: bold; margin-bottom: 8px; text-align: center; }
+.contact-input { font-size: 14px; text-align: center; }
+.summary-input { font-size: 14px; line-height: 1.6; }
+.skill-input { display: inline-block; width: auto; min-width: 80px; margin-right: 8px; font-size: 14px; }
+.job-title-input { font-weight: bold; font-size: 16px; width: 60%; }
+.job-date-input { font-size: 14px; text-align: right; width: 30%; }
+.bullet-input { width: 100%; font-size: 14px; line-height: 1.6; margin-bottom: 4px; }

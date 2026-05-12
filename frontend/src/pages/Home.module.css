@@ -1,0 +1,277 @@
+/* src/pages/Home.module.css */
+
+/* --- CSS Variables for Light/Dark Theme --- */
+:global(:root) {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #4b5563;
+    --nav-bg: rgba(255, 255, 255, 0.85);
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --footer-bg: #0f172a;
+    --footer-text: #94a3b8;
+    --footer-heading: #ffffff;
+}
+
+:global([data-theme="dark"]) {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --nav-bg: rgba(15, 23, 42, 0.85);
+    --card-bg: #334155;
+    --border-color: #475569;
+    --footer-bg: #020617;
+    --footer-text: #94a3b8;
+    --footer-heading: #f8fafc;
+}
+
+/* --- Navigation Bar --- */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 5%;
+    background: var(--nav-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 1000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    transition: background 0.3s ease;
+}
+
+.brand {
+    font-size: 24px;
+    font-weight: 800;
+    color: #3b82f6; /* Keep brand color consistent */
+    text-decoration: none;
+    letter-spacing: -0.5px;
+}
+
+.navLinks {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.navLink {
+    text-decoration: none;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 15px;
+    transition: color 0.2s ease;
+}
+
+.navLink:hover {
+    color: #2563eb;
+}
+
+/* Theme Toggle Button */
+.themeToggle {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.themeToggle:hover {
+    background-color: var(--border-color);
+}
+
+.navBtn {
+    background: #2563eb;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: background-color 0.2s ease;
+}
+
+.navBtn:hover {
+    background: #1d4ed8;
+}
+
+/* --- Hero Section --- */
+.hero {
+    padding: 180px 20px 120px;
+    text-align: center;
+    /* Hero stays dark/blue to look premium in both modes */
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    color: white;
+}
+
+.heroTitle {
+    font-size: 56px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    line-height: 1.1;
+    letter-spacing: -1px;
+}
+
+.heroSubtitle {
+    font-size: 20px;
+    color: #bfdbfe;
+    max-width: 650px;
+    margin: 0 auto 40px auto;
+    line-height: 1.6;
+}
+
+.ctaBtn {
+    background: #3b82f6;
+    color: white;
+    padding: 18px 40px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+    display: inline-block;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.ctaBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+    background: #2563eb;
+}
+
+/* --- Features Section --- */
+.features {
+    padding: 100px 5%;
+    background: var(--bg-secondary);
+    text-align: center;
+    transition: background 0.3s ease;
+}
+
+.sectionTitle {
+    font-size: 36px;
+    color: var(--text-primary);
+    margin-bottom: 60px;
+    font-weight: 800;
+    transition: color 0.3s ease;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    text-align: left;
+    border: 1px solid var(--border-color);
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.icon {
+    font-size: 40px;
+    margin-bottom: 24px;
+    display: inline-block;
+    background: #eff6ff;
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.cardTitle {
+    font-size: 22px;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    font-weight: 700;
+    transition: color 0.3s ease;
+}
+
+.cardText {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 15px;
+    transition: color 0.3s ease;
+}
+
+/* --- Footer Section --- */
+.footer {
+    background: var(--footer-bg);
+    color: var(--footer-text);
+    padding: 80px 5% 30px;
+    transition: background 0.3s ease;
+}
+
+.footerGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto 60px auto;
+}
+
+.footerHeading {
+    color: var(--footer-heading);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    transition: color 0.3s ease;
+}
+
+.footerText {
+    line-height: 1.6;
+    margin-bottom: 16px;
+    font-size: 15px;
+}
+
+.footerLink {
+    color: var(--footer-text);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 12px;
+    transition: color 0.2s ease;
+    font-size: 15px;
+}
+
+.footerLink:hover {
+    color: var(--footer-heading);
+}
+
+.contactLink {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.contactLink:hover {
+    text-decoration: underline;
+}
+
+.bottom {
+    text-align: center;
+    padding-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .navLinks { display: none; }
+    .heroTitle { font-size: 40px; }
+}
