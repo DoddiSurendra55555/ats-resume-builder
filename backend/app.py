@@ -1,11 +1,23 @@
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import json
-# Importing the correct streaming function name
+import os
 from api.gemini_service import generate_optimized_resume_stream, generate_interview_qa, edit_resume_with_ai
 
 app = Flask(__name__)
-CORS(app)
+
+# PRODUCTION CORS SETTINGS:
+# This allows your specific Vercel URL and your local testing environment
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "https://ats-resume-builder-two-psi.vercel.app", 
+            "http://localhost:5173"
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 @app.route('/api/optimize', methods=['POST'])
 def optimize_resume():
@@ -35,9 +47,6 @@ def generate_interview():
     resume_data = data.get('resumeData')
     job_description = data.get('jobDescription')
 
-    if not api_key or not resume_data or not job_description:
-        return jsonify({"error": "Missing required fields"}), 400
-
     try:
         qa_json_string = generate_interview_qa(api_key, resume_data, job_description)
         qa_data = json.loads(qa_json_string)
@@ -52,9 +61,6 @@ def chat_edit():
     resume_data = data.get('resumeData')
     user_prompt = data.get('prompt')
 
-    if not api_key or not resume_data or not user_prompt:
-        return jsonify({"error": "Missing required fields"}), 400
-
     try:
         updated_json_string = edit_resume_with_ai(api_key, resume_data, user_prompt)
         updated_data = json.loads(updated_json_string)
@@ -63,4 +69,6 @@ def chat_edit():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Use the port assigned by Render, or 5000 for local dev
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
