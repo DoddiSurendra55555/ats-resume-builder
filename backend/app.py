@@ -7,13 +7,10 @@ from api.gemini_service import generate_optimized_resume_stream, generate_interv
 app = Flask(__name__)
 
 # PRODUCTION CORS SETTINGS:
-# This allows your specific Vercel URL and your local testing environment
+# The "*" origin allows BOTH your main Vercel URL and any temporary preview URLs to connect safely.
 CORS(app, resources={
     r"/api/*": {
-        "origins": [
-            "https://ats-resume-builder-two-psi.vercel.app", 
-            "http://localhost:5173"
-        ],
+        "origins": "*",
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
