@@ -12,7 +12,7 @@ const ResumeChatbot = () => {
 
         setIsEditing(true);
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/chat-edit', {
+            const response = await fetch('https://ats-resume-builder-backend-9dj5.onrender.com/api/chat-edit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 

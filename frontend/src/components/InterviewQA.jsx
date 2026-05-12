@@ -6,7 +6,7 @@ const InterviewQA = () => {
     const generateQA = async () => {
         setLoadingQA(true);
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/generate-interview', {
+            const response = await fetch('https://ats-resume-builder-backend-9dj5.onrender.com/api/generate-interview', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
